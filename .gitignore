@@ -1,0 +1,15 @@
+﻿# Godot 4+ specific ignores
+.godot/
+/android/
+
+# Godot export artifacts
+/build/
+/export/
+*.pck
+*.zip
+
+# OS / editor noise
+.DS_Store
+Thumbs.db
+*.tmp
+*.log
