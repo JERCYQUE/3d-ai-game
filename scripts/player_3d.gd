@@ -1,14 +1,42 @@
 extends CharacterBody3D
 ## Third-person character controller.
-## Gravity, camera-relative WASD movement, Space to jump.
+## Mouse-look camera (SpringArm3D), gravity, camera-relative WASD,
+## smooth turn toward the movement direction, Space to jump.
 
 @export var move_speed: float = 5.0
 @export var acceleration: float = 14.0
 @export var jump_velocity: float = 4.8
-@export var camera_path: NodePath = ^"SpringArm3D/Camera3D"
+@export var turn_speed: float = 10.0
+## Degrees of camera rotation per pixel of mouse movement.
+@export var mouse_sensitivity: float = 0.12
+@export var min_pitch: float = -70.0
+@export var max_pitch: float = 15.0
 
-@onready var _camera: Camera3D = get_node_or_null(camera_path) as Camera3D
+@onready var _arm: SpringArm3D = $SpringArm3D
+@onready var _visual: Node3D = $Visual
 @onready var _gravity: float = ProjectSettings.get_setting("physics/3d/default_gravity", 9.8)
+
+var _pitch: float = -15.0
+
+
+func _ready() -> void:
+	_pitch = _arm.rotation_degrees.x
+	Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
+
+
+func _unhandled_input(event: InputEvent) -> void:
+	if event is InputEventMouseMotion and Input.mouse_mode == Input.MOUSE_MODE_CAPTURED:
+		var motion: InputEventMouseMotion = event
+		# Yaw around the player, pitch on the arm itself (clamped so the
+		# camera never flips over the character).
+		_arm.rotation_degrees.y -= motion.relative.x * mouse_sensitivity
+		_pitch = clampf(_pitch - motion.relative.y * mouse_sensitivity, min_pitch, max_pitch)
+		_arm.rotation_degrees.x = _pitch
+		get_viewport().set_input_as_handled()
+	elif event.is_action_pressed("ui_cancel"):
+		Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
+	elif event is InputEventMouseButton and event.pressed:
+		Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
 
 
 func _physics_process(delta: float) -> void:
@@ -38,6 +66,16 @@ func _apply_movement(delta: float) -> void:
 	var horizontal: Vector3 = Vector3(velocity.x, 0.0, velocity.z).lerp(target, weight)
 	velocity.x = horizontal.x
 	velocity.z = horizontal.z
+	if direction.length_squared() > 0.0001:
+		_turn_visual_toward(direction, delta)
+
+
+## Turns the model (not the body) so the mesh faces where it walks:
+## the body keeps its transform, so the camera orbit stays stable.
+func _turn_visual_toward(direction: Vector3, delta: float) -> void:
+	var target_yaw: float = atan2(-direction.x, -direction.z)
+	var weight: float = clampf(turn_speed * delta, 0.0, 1.0)
+	_visual.rotation.y = lerp_angle(_visual.rotation.y, target_yaw, weight)
 
 
 ## Turns the 2D input into a world direction using the camera's yaw,
@@ -46,8 +84,9 @@ func _camera_relative(input_dir: Vector2) -> Vector3:
 	if input_dir.is_zero_approx():
 		return Vector3.ZERO
 	var cam_basis: Basis = global_transform.basis
-	if is_instance_valid(_camera):
-		cam_basis = _camera.global_transform.basis
+	var camera: Camera3D = _arm.get_node_or_null("Camera3D") as Camera3D
+	if is_instance_valid(camera):
+		cam_basis = camera.global_transform.basis
 	var forward: Vector3 = -cam_basis.z
 	forward.y = 0.0
 	var right: Vector3 = cam_basis.x
