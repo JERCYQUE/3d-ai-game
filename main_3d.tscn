@@ -1,6 +1,9 @@
 [gd_scene format=3 uid="uid://jt3vcblnxgep"]
 
-[ext_resource type="PackedScene" path="res://player_3d.tscn" id="1_player"]
+[ext_resource type="PackedScene" uid="uid://dk8x7aa5yuxfp" path="res://player_3d.tscn" id="1_player"]
+[ext_resource type="PackedScene" uid="uid://bcsd681xfdsd0" path="res://models/obstacle.glb" id="2_nrwyk"]
+[ext_resource type="Script" uid="uid://ccmf56vx32pow" path="res://scripts/coin.gd" id="3_2wc1w"]
+[ext_resource type="Material" uid="uid://c1kvuwt0bewa5" path="res://materials/coin_gold.tres" id="4_8jj3j"]
 
 [sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_sky"]
 sky_top_color = Color(0.25, 0.45, 0.78, 1)
@@ -33,6 +36,28 @@ size = Vector3(20, 1, 20)
 [sub_resource type="BoxShape3D" id="BoxShape3D_floor"]
 size = Vector3(20, 1, 20)
 
+[sub_resource type="BoxShape3D" id="BoxShape3D_wiwsh"]
+size = Vector3(2, 2, 2)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_xofcu"]
+size = Vector3(2, 2, 2)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_vipva"]
+size = Vector3(2, 2, 2)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_et6uk"]
+size = Vector3(2, 2, 2)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_wi601"]
+size = Vector3(2, 2, 2)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_xjxh8"]
+size = Vector3(2, 2, 2)
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_238tj"]
+height = 0.08
+radial_segments = 32
+
 [node name="Main3D" type="Node3D" unique_id=1528576449]
 
 [node name="Sun" type="DirectionalLight3D" parent="." unique_id=1935361615]
@@ -56,3 +81,66 @@ shape = SubResource("BoxShape3D_floor")
 
 [node name="Player" parent="." unique_id=686785173 instance=ExtResource("1_player")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.1, 0)
+
+[node name="Wall1" type="StaticBody3D" parent="." unique_id=538348586]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4, 0, -3)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Wall1" unique_id=1411799551]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0)
+shape = SubResource("BoxShape3D_wiwsh")
+
+[node name="Crate" parent="Wall1" unique_id=1571719286 instance=ExtResource("2_nrwyk")]
+
+[node name="Wall2" type="StaticBody3D" parent="." unique_id=383005725]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2, 0, -3)
+
+[node name="Crate" parent="Wall2" unique_id=453813417 instance=ExtResource("2_nrwyk")]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Wall2" unique_id=2001537741]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0)
+shape = SubResource("BoxShape3D_xofcu")
+
+[node name="Wall3" type="StaticBody3D" parent="." unique_id=1901011881]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -3)
+
+[node name="Crate" parent="Wall3" unique_id=282651299 instance=ExtResource("2_nrwyk")]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Wall3" unique_id=1143852324]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0)
+shape = SubResource("BoxShape3D_vipva")
+
+[node name="Wall4" type="StaticBody3D" parent="." unique_id=725918310]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1, 0, -6)
+
+[node name="Crate" parent="Wall4" unique_id=947380397 instance=ExtResource("2_nrwyk")]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Wall4" unique_id=73119101]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0)
+shape = SubResource("BoxShape3D_et6uk")
+
+[node name="Wall5" type="StaticBody3D" parent="." unique_id=855802689]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3, 0, -6)
+
+[node name="Crate" parent="Wall5" unique_id=1892140505 instance=ExtResource("2_nrwyk")]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Wall5" unique_id=1204176285]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0)
+shape = SubResource("BoxShape3D_wi601")
+
+[node name="Wall6" type="StaticBody3D" parent="." unique_id=1358443974]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5, 0, -6)
+
+[node name="Crate" parent="Wall6" unique_id=1139327943 instance=ExtResource("2_nrwyk")]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Wall6" unique_id=12613015]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0)
+shape = SubResource("BoxShape3D_xjxh8")
+
+[node name="Coin" type="Node3D" parent="." unique_id=33963324]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2, 1.3, -8.5)
+script = ExtResource("3_2wc1w")
+
+[node name="Disc" type="MeshInstance3D" parent="Coin" unique_id=1438490246]
+transform = Transform3D(1, 0, 0, 0, -4.371139e-08, -1, 0, 1, -4.371139e-08, 0, 0, 0)
+material_override = ExtResource("4_8jj3j")
+mesh = SubResource("CylinderMesh_238tj")

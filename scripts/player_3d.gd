@@ -1,7 +1,7 @@
 extends CharacterBody3D
 ## Third-person character controller.
-## Mouse-look camera (SpringArm3D), gravity, camera-relative WASD,
-## smooth turn toward the movement direction, Space to jump.
+## Mouse-look camera (SpringArm3D) that collides with the level, wheel zoom,
+## gravity, camera-relative WASD, smooth turn toward movement, Space to jump.
 
 @export var move_speed: float = 5.0
 @export var acceleration: float = 14.0
@@ -11,6 +11,9 @@ extends CharacterBody3D
 @export var mouse_sensitivity: float = 0.12
 @export var min_pitch: float = -70.0
 @export var max_pitch: float = 15.0
+@export var zoom_step: float = 0.4
+@export var min_zoom: float = 1.2
+@export var max_zoom: float = 8.0
 
 @onready var _arm: SpringArm3D = $SpringArm3D
 @onready var _visual: Node3D = $Visual
@@ -21,6 +24,10 @@ var _pitch: float = -15.0
 
 func _ready() -> void:
 	_pitch = _arm.rotation_degrees.x
+	# The arm must not collide with the character it is attached to,
+	# otherwise it snaps onto its own capsule and the camera glues to the head.
+	_arm.add_excluded_object(self)
+	_arm.collision_mask = 1
 	Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
 
 
@@ -33,10 +40,16 @@ func _unhandled_input(event: InputEvent) -> void:
 		_pitch = clampf(_pitch - motion.relative.y * mouse_sensitivity, min_pitch, max_pitch)
 		_arm.rotation_degrees.x = _pitch
 		get_viewport().set_input_as_handled()
+	elif event is InputEventMouseButton and event.pressed:
+		var button: InputEventMouseButton = event
+		if button.button_index == MOUSE_BUTTON_WHEEL_UP:
+			_arm.spring_length = clampf(_arm.spring_length - zoom_step, min_zoom, max_zoom)
+		elif button.button_index == MOUSE_BUTTON_WHEEL_DOWN:
+			_arm.spring_length = clampf(_arm.spring_length + zoom_step, min_zoom, max_zoom)
+		else:
+			Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
 	elif event.is_action_pressed("ui_cancel"):
 		Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
-	elif event is InputEventMouseButton and event.pressed:
-		Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
 
 
 func _physics_process(delta: float) -> void:
