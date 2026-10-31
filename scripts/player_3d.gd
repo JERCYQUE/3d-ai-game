@@ -1,7 +1,11 @@
 extends CharacterBody3D
 ## Third-person character controller.
 ## Mouse-look camera (SpringArm3D) that collides with the level, wheel zoom,
-## gravity, camera-relative WASD, smooth turn toward movement, Space to jump.
+## gravity, camera-relative WASD, smooth turn toward movement, Space to jump
+## and a walk bob so the robot steps instead of sliding.
+
+const BOB_AMPLITUDE: float = 0.055
+const BOB_SPEED: float = 9.0
 
 @export var move_speed: float = 5.0
 @export var acceleration: float = 14.0
@@ -20,6 +24,7 @@ extends CharacterBody3D
 @onready var _gravity: float = ProjectSettings.get_setting("physics/3d/default_gravity", 9.8)
 
 var _pitch: float = -15.0
+var _bob_time: float = 0.0
 
 
 func _ready() -> void:
@@ -57,6 +62,7 @@ func _physics_process(delta: float) -> void:
 	_handle_jump()
 	_apply_movement(delta)
 	move_and_slide()
+	_animate_visual(delta)
 
 
 func _apply_gravity(delta: float) -> void:
@@ -89,6 +95,18 @@ func _turn_visual_toward(direction: Vector3, delta: float) -> void:
 	var target_yaw: float = atan2(-direction.x, -direction.z)
 	var weight: float = clampf(turn_speed * delta, 0.0, 1.0)
 	_visual.rotation.y = lerp_angle(_visual.rotation.y, target_yaw, weight)
+
+
+## Walk bob: the model rises and falls while it moves on the ground,
+## and settles back to zero when it stops or is airborne.
+func _animate_visual(delta: float) -> void:
+	var speed: float = Vector2(velocity.x, velocity.z).length()
+	if is_on_floor() and speed > 0.4:
+		_bob_time += delta * BOB_SPEED * clampf(speed / move_speed, 0.35, 1.0)
+		_visual.position.y = sin(_bob_time) * BOB_AMPLITUDE
+	else:
+		_bob_time = 0.0
+		_visual.position.y = lerpf(_visual.position.y, 0.0, clampf(delta * 12.0, 0.0, 1.0))
 
 
 ## Turns the 2D input into a world direction using the camera's yaw,
