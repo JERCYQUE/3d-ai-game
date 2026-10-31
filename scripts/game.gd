@@ -20,6 +20,8 @@ var total_coins: int = 0
 var time_left: float = 0.0
 var best_time: float = 0.0
 var finished: bool = false
+## True while the window is out of focus: the countdown waits for the player.
+var focus_paused: bool = false
 ## How many times the pickup sound was triggered (handy for tests).
 var sfx_count: int = 0
 
@@ -38,8 +40,17 @@ func _ready() -> void:
 	_update_best()
 
 
+## The countdown must not tick while the window is in the background,
+## otherwise the player loses time just by alt-tabbing away.
+func _notification(what: int) -> void:
+	if what == NOTIFICATION_APPLICATION_FOCUS_OUT:
+		focus_paused = true
+	elif what == NOTIFICATION_APPLICATION_FOCUS_IN:
+		focus_paused = false
+
+
 func _process(delta: float) -> void:
-	if finished:
+	if finished or focus_paused:
 		return
 	time_left = maxf(time_left - delta, 0.0)
 	_update_timer()

@@ -1,0 +1,78 @@
+name: Build Windows
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+env:
+  GODOT_VERSION: "4.7.2"
+  EXPORT_NAME: "3d_ai_game"
+  EXPORT_PRESET: "Windows Desktop"
+
+jobs:
+  export:
+    name: Export Windows build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Download Godot
+        run: |
+          set -e
+          BASE="https://github.com/godotengine/godot/releases/download/${GODOT_VERSION}-stable"
+          wget -q "${BASE}/Godot_v${GODOT_VERSION}-stable_linux.x86_64.zip"
+          unzip -q "Godot_v${GODOT_VERSION}-stable_linux.x86_64.zip"
+          chmod +x "Godot_v${GODOT_VERSION}-stable_linux.x86_64"
+          sudo mv "Godot_v${GODOT_VERSION}-stable_linux.x86_64" /usr/local/bin/godot
+          godot --version
+
+      - name: Download export templates
+        run: |
+          set -e
+          BASE="https://github.com/godotengine/godot/releases/download/${GODOT_VERSION}-stable"
+          wget -q "${BASE}/Godot_v${GODOT_VERSION}-stable_export_templates.tpz"
+          mkdir -p "$HOME/.local/share/godot/export_templates/${GODOT_VERSION}.stable"
+          unzip -q "Godot_v${GODOT_VERSION}-stable_export_templates.tpz" -d /tmp/templates
+          mv /tmp/templates/templates/* "$HOME/.local/share/godot/export_templates/${GODOT_VERSION}.stable/"
+          ls "$HOME/.local/share/godot/export_templates/${GODOT_VERSION}.stable" | head
+
+      # The MCP debug bridge must never ship with the game.
+      - name: Drop the MCP runtime probe autoload
+        run: |
+          python3 - <<'EOF'
+          import pathlib, re
+          path = pathlib.Path("project.godot")
+          text = path.read_text(encoding="utf-8")
+          text = re.sub(r"\[autoload\][\s\S]*?(?=\n\[)", "", text, count=1)
+          path.write_text(text, encoding="utf-8")
+          print("[autoload]" in text)
+          EOF
+
+      - name: Import assets
+        run: godot --headless --path . --import || true
+
+      - name: Export release
+        run: |
+          set -e
+          mkdir -p build
+          godot --headless --path . --export-release "${EXPORT_PRESET}" "build/${EXPORT_NAME}.exe"
+          ls -lh "build/${EXPORT_NAME}.exe"
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: "${{ env.EXPORT_NAME }}-windows"
+          path: "build/${{ env.EXPORT_NAME }}.exe"
+
+      - name: Attach build to the release
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: "build/${{ env.EXPORT_NAME }}.exe"
+          generate_release_notes: true
